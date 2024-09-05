@@ -1,0 +1,54 @@
+version: '3.8'
+services:
+  db:
+    image: mysql
+    restart: always
+    environment :
+      MYSQL_DATABASE : covoiturage_app
+      MYSQL_ROOT_PASSWORD: 'root'
+    ports:
+      - '3307:3306'
+    networks: 
+        - network
+    volumes:
+      - ./docker-compose-databases/mysql:/var/lib/mysql
+  gateway:
+    image: amazoncorretto:21
+    container_name: gateway
+    build:
+      dockerfile: ./GatewayService/gateway.dockerfile
+    ports:
+      - '8080:8080'
+    depends_on :
+    - carRide
+    # environment:
+      # PORT_GATEWAY: 8080
+      # PORT_COMM: '8084'
+      # PORT_AUTH: '8085'
+      # PORT_USER: '8083'
+      # PORT_CAR_RIDE: '8082'
+    networks:
+      - network
+
+
+  carRide:
+    image: amazoncorretto:21
+    container_name: carRide
+    build:
+      dockerfile: ./CarRideService/carride.dockerfile
+    ports:
+      - '8082:8082'
+    environment:
+      URL_DATABASE: jdbc:mysql://localhost:3306/covoiturage_app
+      DATABASE_USERNAME: root
+      DATABASE_PASSWORD: root
+      # PORT_CARRIDE: 8082
+
+    # depends_on :
+    #   - db
+    networks:
+      - network
+
+networks:
+  network:
+    driver: bridge
